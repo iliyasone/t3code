@@ -92,6 +92,8 @@ function settlementPullRequestLinks(
 ): ReadonlyArray<SettlementPullRequestLink> {
   return visibleThreadPullRequests(links).filter((link) => {
     if (link.snapshot === null || link.snapshot.state === "open") return true;
+    // A created link lands when its command ends, after a merge in the same command.
+    if (link.source === "created") return true;
     const linkedAtMs = Date.parse(link.linkedAt);
     return Number.isNaN(linkedAtMs) || linkTerminalAtMs(link) >= linkedAtMs;
   });
