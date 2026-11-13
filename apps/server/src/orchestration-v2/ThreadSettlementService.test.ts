@@ -417,12 +417,17 @@ describe("resolveAutoSettlementAt", () => {
   });
 
   it("does not settle on pull requests that were already merged when linked", () => {
-    const link = (number: number, linkedAt: DateTime.Utc, mergedAt: DateTime.Utc) => ({
+    const link = (
+      number: number,
+      linkedAt: DateTime.Utc,
+      mergedAt: DateTime.Utc,
+      source: "agent" | "created" = "agent",
+    ) => ({
       host: "example.test",
       repository: "owner/repository",
       number,
       url: `https://example.test/owner/repository/pull/${number}`,
-      source: "agent" as const,
+      source,
       linkedAt: DateTime.formatIso(linkedAt),
       snapshot: {
         state: "merged" as const,
@@ -455,6 +460,15 @@ describe("resolveAutoSettlementAt", () => {
         thread: {
           ...input.thread,
           pullRequests: [recorded, link(2, at(-90 * 60 * 1_000), at(-40 * 60 * 1_000))],
+        },
+      }),
+    ).toEqual(at(-45 * 60 * 1_000));
+    expect(
+      ThreadSettlementService.resolveAutoSettlementAt({
+        ...input,
+        thread: {
+          ...input.thread,
+          pullRequests: [link(3, at(-50 * 60 * 1_000), at(-55 * 60 * 1_000), "created")],
         },
       }),
     ).toEqual(at(-45 * 60 * 1_000));
